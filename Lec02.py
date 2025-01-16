@@ -117,7 +117,7 @@ U, S, Vt = np.linalg.svd(X, full_matrices=False)
 
 # find the inverse of X in least squares sense (Pseudo inverse of X)
 
-Xdagger = (X^T X)^-1 X^T
+#Xdagger = (X^T X)^-1 X^T
 
 #complete caluculate the coeffs
 
