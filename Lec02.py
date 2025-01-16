@@ -55,10 +55,10 @@ print(f"L2 norm of relative errors: {np.linalg.norm(rel_errors)}")
 # the solution to find the coefficients at which the gradient of the objective function is zero
 # write the loss_matrix in terms of the data and coefs
 
-loss_matrix = (y - X@coefs).T @ (y - X@coefs) /n_samples
+loss_matrix = (y - X @ coefs).T @ (y - X @ coefs) / n_samples
 
 # calculate the gradient of the loss with respect to the coefficients
-grad_matrix = -2/n_samples * X.T @ (y - X @ coefs)
+grad_matrix = -2 / n_samples * X.T @ (y - X @ coefs)
 
 # Solve grad_matrix=0 for coefs
 # X.T @ y = X.T @ X @ coefs
@@ -83,15 +83,17 @@ n_samples, n_features = X.shape
 print(f"Number of samples, features: {n_samples, n_features}")
 
 X = np.hstack((np.ones((n_samples, 1)), X))
+
+############################### inverse method ################################
+
 coefs = np.linalg.inv(X.T @ X) @  X.T @ y
 np.savetxt("coefs_all.csv", coefs, delimiter=",")
 
+############################### QR decomposition ################################
+
 rank_XTX = np.linalg.matrix_rank(X.T @ X)
 print(f"Rank of X.T @ X: {rank_XTX}")
-
 Q,R = np.linalg.qr(X)
-
-print()
 
 np.savetxt("R.csv", R, delimiter=",")
 
@@ -116,27 +118,30 @@ for i in range(n_features, -1, -1):
 
 np.savetxt("coeffs_qr_loop.csv", coeffs_qr_loop, delimiter=",")
 
+############################### SVD decomposition ################################
+
 # solve normal eq using svd X = U S V^T
-# U, S, Vt = np.linalg.svd(X, full_matrices=False)
+
 U, S, Vt = np.linalg.svd(X)
 
 # find the inverse of X in least squares sense (Pseudo inverse of X)
-
 #Xdagger = (X^T X)^-1 X^T
 
-#complete caluculate the coeffs
-print(Vt.shape, S.T.shape, U.T.shape)
 Sp = 1/(S*S)
 spdiag = np.diag(Sp)
 S = np.diag(S)
-#print(S)
+
 S = np.vstack((S, np.zeros((500-12,12))))
 
 
 print(Vt.shape, S.T.shape, U.T.shape)
 
-# coeff_svd = Vt.T @ np.linalg.inv(S.T @ S) @ S.T @ U.T @y
+# coeff_svd = Vt.T @ (S.T @ S)^-1 @ S.T @ U.T @y
 coeff_svd = Vt.T @ (spdiag) @ S.T @ U.T @y
 
-np.savetxt("coef_svd.csv",coeff_svd, delimiter=',' )
+np.savetxt("coef_svd.csv", coeff_svd, delimiter=',')
+
+is_same = np.allclose(predictions_bydefn, predictions)
+print(f"Are the coefficients the same with svd and qr method?", is_same)
+
 
