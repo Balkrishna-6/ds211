@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 #use pandas to load real_estate_dataset.csv
 df = pd.read_csv("real_estate_dataset.csv")
@@ -122,26 +123,48 @@ np.savetxt("coeffs_qr_loop.csv", coeffs_qr_loop, delimiter=",")
 
 # solve normal eq using svd X = U S V^T
 
-U, S, Vt = np.linalg.svd(X)
+U, S, Vt = np.linalg.svd(X, full_matrices=False)
 
-# find the inverse of X in least squares sense (Pseudo inverse of X)
-#Xdagger = (X^T X)^-1 X^T
+coeffs_svd = Vt.T @ np.diag(1/S) @ U.T @ y
 
-Sp = 1/(S*S)
-spdiag = np.diag(Sp)
-S = np.diag(S)
+coeffs_svd_pinv = np.linalg.pinv(X) @ y
 
-S = np.vstack((S, np.zeros((500-12,12))))
+np.savetxt("coeffs_svd.csv", coeffs_svd, delimiter=",")
+
+np.savetxt("coeffs_svd_pinv.csv", coeffs_svd_pinv, delimiter=",")
 
 
-print(Vt.shape, S.T.shape, U.T.shape)
+# plot the data on X[:,1] vs y axis
 
-# coeff_svd = Vt.T @ (S.T @ S)^-1 @ S.T @ U.T @y
-coeff_svd = Vt.T @ (spdiag) @ S.T @ U.T @y
+# X_1 = X[:, 0:1]
+# coeffs_1 = np.linalg.inv(X_1.T @ X_1) @ X_1.T @ y
 
-np.savetxt("coef_svd.csv", coeff_svd, delimiter=',')
+# X_feature = np.arange(np.min(X_1[:,1]), np.max(X_1[:,1]), 0.01)
+# plt.scatter(X[:,1],y) 
+# plt.plot(X_feature, X_feature * coeffs_svd[1], color="red")
+# plt.xlabel('Square Feet')
+# plt.ylabel("Price")
+# plt.title("Price vs Square Feet")
+# plt.show()
 
-is_same = np.allclose(predictions_bydefn, predictions)
-print(f"Are the coefficients the same with svd and qr method?", is_same)
 
+X = df["Square_Feet"].values
+y = df["Price"].values
+
+X = np.hstack((np.ones((n_samples,1)), X.reshape(-1,1)))
+
+coeffs_1 = np.linalg.inv(X.T @ X) @ X.T @ y
+
+predictions_1 = X @ coeffs_1
+
+X_feature = np.arange(np.min(X[:,1]), np.max(X[:,1]), 0.01)
+
+
+
+plt.scatter(X[:,1],y) 
+plt.plot(X_feature, X_feature * coeffs_1[1] + coeffs_1[0], color="red")
+plt.xlabel('Square Feet')
+plt.ylabel("Price")
+plt.title("Price vs Square Feet")
+plt.show()
 
